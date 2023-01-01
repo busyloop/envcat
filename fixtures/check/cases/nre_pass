@@ -1,0 +1,4 @@
+hello .all.
+hello ^.ell$
+hello ^hall
+123 ^\d\d$

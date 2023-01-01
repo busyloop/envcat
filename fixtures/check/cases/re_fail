@@ -1,0 +1,6 @@
+hello ^o
+1x3 ^\d+$
+a:c a[:]b
+bonk ^(foo|bar|batz)$
+foo ^((?!foo|bar|batz).)*$
+bar ^((?!foo|bar|batz).)*$

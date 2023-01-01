@@ -1,0 +1,9 @@
+hello ^he
+hello ^.ell.$
+hello lo$
+123 ^\d+$
+a:b a[:]b
+abc a[:b]c
+foo ^(foo|bar|batz)$
+bar ^(foo|bar|batz)$
+bonk ^((?!foo|bar|batz).)*$

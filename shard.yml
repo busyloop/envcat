@@ -1,0 +1,39 @@
+name: envcat
+version: 1.0.0
+
+authors:
+  - moe <moe@busyloop.net>
+
+targets:
+  envcat:
+    main: src/envcat/cli.cr
+
+crystal: &crystal_version 1.6.2
+
+license: MIT
+
+support_matrix:
+  crystal_versions:
+    - *crystal_version
+
+  platforms:
+    - ubuntu-latest
+    - macos-latest
+    - buildjet-2vcpu-ubuntu-2204-arm
+
+dependencies:
+  crinja:
+    github: straight-shoota/crinja
+    # version: 0.8.0
+    commit: ca17c3d698b2d1d7ccc702079e93e31788caabb2
+
+  toka:
+    github: Papierkorb/toka
+    # version: 0.1.2
+    commit: 3c160b77369e3491954b782601247f668ccff071
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+    version: 1.3.1
+

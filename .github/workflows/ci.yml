@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches:
+      - 'master'
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      trusted: ${{ steps.contains_tag.outputs.retval }}
+      matrix_json: ${{ steps.crystal_action.outputs.matrix_json }}
+      crystal_version: ${{ steps.crystal_action.outputs.crystal_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Lint
+        uses: crystal-ameba/github-action@v0.6.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine if tag is on trusted branch
+        uses: rickstaa/action-contains-tag@0f592a0dd54a67d9af4545f6b6687ee01853d9a7
+        id: contains_tag
+        with:
+          frail: false
+          reference: "master"
+          tag: "${{ github.ref }}"
+
+      - name: Crystal Action
+        id: crystal_action
+        run: .github/workflows/crystal_action.rb
+
+  build:
+    name: Test & Build
+    needs: prepare
+    strategy:
+      fail-fast: true
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.matrix_json) }}
+    runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - if: matrix.platform != 'ubuntu-latest' && !endsWith(matrix.platform, '-arm')
+        name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: ${{ matrix.crystal }}
+
+      - if: matrix.platform != 'ubuntu-latest' && !endsWith(matrix.platform, '-arm')
+        name: Test & Build (on runner host)
+        run: |
+          make clean ci release
+
+      - if: matrix.platform == 'ubuntu-latest' || endsWith(matrix.platform, '-arm')
+        name: Test & Build (in alpine)
+        uses: addnab/docker-run-action@v3
+        with:
+          image: 84codes/crystal:${{ matrix.crystal }}-alpine
+          options: -v ${{ github.workspace }}:/workspace
+          run: |
+            cd /workspace && make clean ci release
+
+      - if: startsWith(github.ref, 'refs/tags/') && matrix.crystal == needs.prepare.outputs.crystal_version && needs.prepare.outputs.trusted == 'true'
+        name: Compute checksum
+        run: |
+          shasum -a 256 build/* >checksums.txt
+
+      - if: startsWith(github.ref, 'refs/tags/') && matrix.crystal == needs.prepare.outputs.crystal_version && needs.prepare.outputs.trusted == 'true'
+        name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: sha256-${{ matrix.platform }}
+          path: checksums.txt
+
+      - if: startsWith(github.ref, 'refs/tags/') && matrix.crystal == needs.prepare.outputs.crystal_version && needs.prepare.outputs.trusted == 'true'
+        name: Draft release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/*"
+          allowUpdates: true
+          draft: true
+          updateOnlyUnreleased: false
+          generateReleaseNotes: false
+          omitBody: true
+
+  release:
+    name: Release
+    needs: [prepare, build]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+
+    if: startsWith(github.ref, 'refs/tags/') && needs.prepare.outputs.trusted == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate Release Notes
+        run: .github/workflows/release_notes.sh >release.txt
+
+      - name: Finish Release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          draft: false
+          updateOnlyUnreleased: false
+          generateReleaseNotes: false
+          bodyFile: release.txt
+          omitBody: false
+
