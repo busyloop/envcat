@@ -1,0 +1,168 @@
+{#-
+ # Run `make README.md` to compile this template and overwrite README.md
+-#}
+<!--
+{{'RG8gbm90IGVkaXQgdGhpcyBmaWxlLiBFZGl0ICdkb2NzL3RlbXBsYXRlcy9SRUFETUUubWQuajInIGluc3RlYWQgYW5kIHJ1biAnbWFrZSBSRUFETUUubWQnLg==' | b64decode}}
+-->
+
+# envcat
+
+[![Build](https://github.com/busyloop/envcat/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/busyloop/envcat/actions/workflows/ci.yml?query=branch%3Amaster) [![GitHub](https://img.shields.io/github/license/busyloop/envcat)](https://en.wikipedia.org/wiki/MIT_License) [![GitHub release](https://img.shields.io/github/release/busyloop/envcat.svg)](https://github.com/busyloop/envcat/releases)
+
+<img src="https://github.com/busyloop/envcat/raw/master/assets/mugshot.png" alt="🐟" width="342" align="right" />
+
+**Your Shell Environment Swiss Army Knife.** 🇨🇭
+
+## Features
+
+* Print environment variables in JSON, YAML or other formats
+* Validate your environment variables
+* Populate a template with env-variables from stdin to stdout
+
+<sub><b>Hint:</b> envcat loves templating config-files in a Docker or Kubernetes environment.</sub>
+
+<br>
+
+## Installation
+
+#### Download static executable
+
+| OS           | Arch    | Version               |      |
+| ------------ | ------- | --------------------- | ---- |
+| OSX (Darwin) | x86_64  | {{VERSION}} (latest)  | [Download](https://github.com/busyloop/envcat/releases/tag/v{{VERSION}}) |
+| Linux        | x86_64  | {{VERSION}} (latest)  | [Download](https://github.com/busyloop/envcat/releases/tag/v{{VERSION}}) |
+| Linux        | aarch64 | {{VERSION}} (latest)  | [Download](https://github.com/busyloop/envcat/releases/tag/v{{VERSION}}) |
+
+#### Dockerfile
+
+See the [download page](https://github.com/busyloop/envcat/releases/tag/v{{VERSION}}) for an example Dockerfile. :whale:
+
+{%- raw -%}
+## Usage
+
+```bash
+# Print
+envcat '*'                           # Print all env vars in JSON-format
+envcat -f yaml SHELL HOME            # Print $SHELL and $HOME in YAML-format
+
+# Validate
+envcat -c ADDR:ipv4                  # Exit 1 if $ADDR is undefined or not an IPv4 address
+envcat -c ADDR:?ipv4                 # Exit 1 if $ADDR is defined and not an IPv4 address
+
+# Template
+echo "{{HOME}}" | envcat -f j2 '*'   # Read j2 template from stdin and render it to stdout
+echo "{{HOME}}" | envcat -f j2 'H*'  # Same, but only vars starting with H available in the template
+
+# All of the above combined
+echo "{{BIND}}:{{PORT | default('443')}} {{NAME}}" | envcat -f j2 -c PORT:?port -c BIND:ipv4 PORT BIND NAME
+```
+
+:bulb: See `envcat --help` for full syntax reference.
+
+
+
+## Templating
+
+With `-f j2` envcat renders a jinja2 template from _stdin_ to _stdout_.  
+Environment variables are available as `{{VAR}}`.
+
+envcat will abort with code 5 if your template references an undefined variable,  
+so make sure to provide defaults where appropriate: `{{VAR | default('xxx')}}`.
+
+
+#### Examples
+
+
+```bash
+export FOO=a,b,c
+export BAR=41
+unset NOPE
+
+echo "{{FOO}}"                                          | envcat -f j2 FOO  # => a,b,c
+echo "{{NOPE | default('empty')}}"                      | envcat -f j2 NOPE # => empty
+echo "{% for x in FOO | split(',') %}{{x}}{% endfor %}" | envcat -f j2 FOO  # => abc
+echo "{% if FOO == 'd,e,f' %}A{% else %}B{% endif %}"   | envcat -f j2 FOO  # => B
+echo "{% if BAR | int + 1 == 42 %}yes{% endif %}"       | envcat -f j2 BAR  # => yes
+```
+
+If you need more, please consult the [jinja2 documentation](https://jinja.palletsprojects.com/en/2.11.x/templates/).
+
+**Note:**
+There are some [subtle differences](https://straight-shoota.github.io/crinja/#:~:text=Differences%20from%20Jinja2) between [the jinja2 library used in envcat](https://straight-shoota.github.io/crinja/) and the original Python jinja2.  
+But likely none that you will encounter in normal usage.
+
+
+## Checks
+
+With `-c VAR[:SPEC]` envcat checks that $VAR meets a constraint defined by SPEC.
+
+This flag can be given multiple times.  
+envcat aborts with code 1 if any check fails.
+
+You can prefix a SPEC with `?` to skip it when $VAR is undefined:
+
+```bash
+unset FOO
+envcat -c FOO:i     # => Abort because FOO is undefined
+envcat -c FOO:?i    # => Success because FOO is undefined (check skipped)
+
+export FOO=x
+envcat -c FOO:i     # => Abort because FOO is not an unsigned integer
+envcat -c FOO:?i    # => Abort because FOO is not an unsigned integer
+
+export FOO=1
+envcat -c FOO:i     # => Success because FOO is an unsigned integer
+envcat -c FOO:?i    # => Success because FOO is an unsigned integer
+```
+
+For a full list of available SPEC constraints see below.
+
+
+## Synopsis
+
+```
+{% endraw %}{{ HELP_SCREEN }}{% raw %}
+```
+
+## Advanced: Envcat Transport Format 🚚
+
+Sometimes it can be helpful to pack multiple env vars
+into a single string, to be unpacked elsewhere.  
+You can do this with envcat by using the `etf` format:
+
+```bash
+$ export A=1 B=2 C=3
+
+# Export to ETF format (url-safe base64)
+$ envcat -f etf A B C
+H4sIAPPtsmMA_6tWclSyUjJU0lFyAtJGQNoZSBsr1QIActF58hkAAAA
+
+# Import from ETF format
+# The :etf suffix tells envcat to unpack $VARS_ETF from etf format.
+# The unpacked vars override any existing env vars by the same name.
+$ export VARS_ETF=H4sIAPPtsmMA_6tWclSyUjJU0lFyAtJGQNoZSBsr1QIActF58hkAAAA
+$ envcat -f json VARS_ETF:etf A B C
+{"A":"1","B":"2","C":"3"}
+```
+
+## Exit codes
+
+| Code  |                                                                                       |
+| ----- | ------------------------------------------------------------------------------------- |
+| 0     | Success                                                                               |
+| 1     | Invalid value (`--check` constraint violation)                                        |
+| 3     | Syntax error (invalid argument or template)                                           |
+| 5     | Undefined variable access (e.g. your template contains `{{FOO}}` but $FOO is not set) |
+
+## Contributing
+
+1. Fork it (<https://github.com/busyloop/envcat/fork>)
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
+
+## Contributors
+
+- [moe](https://github.com/m-o-e) - creator and maintainer
+{% endraw %}
