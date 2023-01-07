@@ -64,7 +64,7 @@ With `-f j2` envcat renders a jinja2 template from _stdin_ to _stdout_.
 Environment variables are available as `{{VAR}}`.
 
 envcat will abort with code 5 if your template references an undefined variable,  
-so make sure to provide defaults where appropriate: `{{VARNAME | default('xxx')}}`.
+so make sure to provide defaults where appropriate: `{{VAR | default('xxx')}}`.
 
 
 #### Examples
