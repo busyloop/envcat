@@ -29,9 +29,9 @@ class Envcat::Cli
   Toka.mapping({
     format: {
       type:        String,
-      default:     Format::DEFAULT,
+      default:     Envcat::Cli.default_format,
       value_name:  "FORMAT",
-      description: Format.keys.sort!.join("|") + " (default: #{Format::DEFAULT})",
+      description: Format.keys.sort!.join("|") + " (default: #{Envcat::Cli.default_format})",
     },
     check: {
       type:        Array(String),
@@ -52,6 +52,10 @@ class Envcat::Cli
     banner: "\nUsage: envcat [-f #{Format.keys.join("|")}] [-c <SPEC> ..] [GLOB[:etf] ..]\n\n",
     help:   false,
   })
+
+  def self.default_format
+    PROGRAM_NAME.try &.includes?("envtpl") ? "j2" : Format::DEFAULT
+  end
 
   def self.help
     String.build(4096) do |s|

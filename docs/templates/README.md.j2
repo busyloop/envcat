@@ -63,7 +63,7 @@ echo "{{BIND}}:{{PORT | default('443')}} {{NAME}}" | envcat -f j2 -c PORT:?port 
 
 ## Templating
 
-With `-f j2` envcat renders a jinja2 template from _stdin_ to _stdout_.  
+With `-f j2`, or when called by the name `envtpl`, envcat renders a jinja2 template from _stdin_ to _stdout_.  
 Environment variables are available as `{{VAR}}`.
 
 envcat will abort with code 5 if your template references an undefined variable,  
@@ -81,15 +81,49 @@ unset NOPE
 echo "{{FOO}}"                                          | envcat -f j2 FOO  # => a,b,c
 echo "{{NOPE | default('empty')}}"                      | envcat -f j2 NOPE # => empty
 echo "{% for x in FOO | split(',') %}{{x}}{% endfor %}" | envcat -f j2 FOO  # => abc
-echo "{% if FOO == 'd,e,f' %}A{% else %}B{% endif %}"   | envcat -f j2 FOO  # => B
-echo "{% if BAR | int + 1 == 42 %}yes{% endif %}"       | envcat -f j2 BAR  # => yes
+echo "{% if FOO == 'd,e,f' %}A{% else %}B{% endif %}"   | envtpl FOO        # => B
+echo "{% if BAR | int + 1 == 42 %}yes{% endif %}"       | envtpl BAR        # => yes
 ```
 
-If you need more, please consult the [jinja2 documentation](https://jinja.palletsprojects.com/en/2.11.x/templates/).
 
-**Note:**
-There are some [subtle differences](https://straight-shoota.github.io/crinja/#:~:text=Differences%20from%20Jinja2) between [the jinja2 library used in envcat](https://straight-shoota.github.io/crinja/) and the original Python jinja2.  
-But likely none that you will encounter in normal usage.
+## Template syntax
+
+Envcat supports most jinja2 syntax and [builtin filters](https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-builtin-filters).
+
+On top it provides the following additional filters:
+
+#### b64encode, b64encode_urlsafe
+
+```bash
+export FOO="hello? world?"
+
+# b64encode, b64encode_urlsafe
+echo "{{FOO | b64encode}}"                              | envtpl FOO  # => aGVsbG8/IHdvcmxkPw==
+echo "{{FOO | b64encode_urlsafe}}"                      | envtpl FOO  # => aGVsbG8_IHdvcmxkPw==
+```
+
+#### b64decode
+
+```bash
+export B64_REGULAR="aGVsbG8/IHdvcmxkPw=="
+export B64_URLSAFE="aGVsbG8_IHdvcmxkPw=="
+
+echo "{{B64_REGULAR | b64decode}}"                      | envtpl 'B*' # => hello? world?
+echo "{{B64_URLSAFE | b64decode}}"                      | envtpl 'B*' # => hello? world?
+```
+
+#### split
+
+
+```bash
+export FOO=a,b,c
+
+echo "{% for x in FOO | split(',') %}{{x}}..{% endfor %}" | envtpl FOO  # => a..b..c..
+```
+
+**Note:**  
+Envcat uses a [Crystal implementation of the jinja2 template engine](https://straight-shoota.github.io/crinja/).  
+Python expressions are **not** supported.
 
 
 ## Checks
@@ -161,8 +195,4 @@ $ envcat -f json VARS_ETF:etf A B C
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
-
-## Contributors
-
-- [moe](https://github.com/m-o-e) - creator and maintainer
 {% endraw %}
