@@ -224,8 +224,25 @@ H4sIAPPtsmMA_6tWclSyUjJU0lFyAtJGQNoZSBsr1QIActF58hkAAAA
 # The :etf suffix tells envcat to unpack $VARS_ETF from etf format.
 # The unpacked vars override any existing env vars by the same name.
 $ export VARS_ETF=H4sIAPPtsmMA_6tWclSyUjJU0lFyAtJGQNoZSBsr1QIActF58hkAAAA
-$ envcat -f json VARS_ETF:etf A B C
-{"A":"1","B":"2","C":"3"}
+$ envcat -f export VARS_ETF:etf A B C
+export A=1
+export B=2
+export C=3
+```
+
+You can also layer multiple ETF bundles:
+
+
+```bash
+$ export BUNDLE_A=$(A=xxx envcat -f etf A)
+$ export BUNDLE_B=$(A=hello B=world envcat -f etf A B)
+
+$ envcat -f export BUNDLE_A:etf A B
+export A=xxx
+
+$ envcat -f export BUNDLE_A:etf BUNDLE_B:etf A B
+export A=hello
+export B=world
 ```
 
 ## Exit codes
