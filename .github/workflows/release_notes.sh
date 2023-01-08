@@ -12,9 +12,8 @@ cat <<EOF
 \`\`\`bash
 wget https://github.com/busyloop/envcat/releases/download/v${VERSION}/envcat-${VERSION}.darwin-x86_64
 chmod +x envcat-${VERSION}.darwin-x86_64
-sudo mv envcat-${VERSION}.darwin-x86_64 /usr/local/bin
-sudo ln -sf /usr/local/bin/envcat-${VERSION}.darwin-x86_64 /usr/local/bin/envcat
-sudo ln -sf /usr/local/bin/envcat-${VERSION}.darwin-x86_64 /usr/local/bin/envtpl
+sudo mv envcat-${VERSION}.darwin-x86_64 /usr/local/bin/envcat
+sudo ln -sf /usr/local/bin/envcat /usr/local/bin/envtpl
 \`\`\`
 
 ## Linux
@@ -22,9 +21,8 @@ sudo ln -sf /usr/local/bin/envcat-${VERSION}.darwin-x86_64 /usr/local/bin/envtpl
 \`\`\`bash
 wget https://github.com/busyloop/envcat/releases/download/v${VERSION}/envcat-${VERSION}.linux-x86_64
 chmod +x envcat-${VERSION}.linux-x86_64
-sudo mv envcat-${VERSION}.linux-x86_64 /usr/bin
-sudo ln -sf /usr/bin/envcat-${VERSION}.linux-x86_64 /usr/bin/envcat
-sudo ln -sf /usr/bin/envcat-${VERSION}.linux-x86_64 /usr/bin/envtpl
+sudo mv envcat-${VERSION}.linux-x86_64 /usr/bin/envcat
+sudo ln -sf /usr/bin/envcat /usr/bin/envtpl
 \`\`\`
 
 
