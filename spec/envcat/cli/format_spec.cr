@@ -2,7 +2,7 @@ require "../../spec_helper"
 require "../../../src/envcat/cli"
 
 describe Envcat::Cli do
-  describe "-f export FOO" do
+  describe "when I/O error occurs" do
     it "reports I/O error with exit code 7" do
       expect_output(/^$/, /^Error: Closed stream\n$/) { |o, e, i|
         o.close
