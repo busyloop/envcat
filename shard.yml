@@ -8,7 +8,7 @@ targets:
   envcat:
     main: src/envcat/cli.cr
 
-crystal: &crystal_version 1.6.2
+crystal: &crystal_version 1.7.0
 
 license: MIT
 
