@@ -49,7 +49,7 @@ class Envcat::Cli
       description: "Print version and exit",
     },
   }, {
-    banner: "\nUsage: envcat [-f #{Format.keys.join("|")}] [-c <SPEC> ..] [GLOB[:etf] ..]\n\n",
+    banner: "\nUsage: envcat [-f #{Format.keys.join("|")}] [-c <VAR[:SPEC]> ..] [GLOB[:etf] ..]\n\n",
     help:   false,
   })
 
