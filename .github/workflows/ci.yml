@@ -20,10 +20,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Lint
-        uses: crystal-ameba/github-action@v0.6.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # It's too slow. Will be re-added when this fix is released:
+      # https://github.com/crystal-ameba/github-action/commit/6d139121f94294e33921104408ef98bdd33407c3
+      # - name: Lint
+      #   uses: crystal-ameba/github-action@v0.6.0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Determine if tag is on trusted branch
         uses: rickstaa/action-contains-tag@0f592a0dd54a67d9af4545f6b6687ee01853d9a7

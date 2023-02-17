@@ -56,7 +56,7 @@ version:
 
 prepare_alpine:
 ifeq ($(shell [[ ! -z "$(ALPINE_VERSION)" ]] && echo true),true)
-	apk add yaml-static
+	apk add yaml-static libxml2-static xz-static
 endif
 
 # Static linux release build inside alpine
