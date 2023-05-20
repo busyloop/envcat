@@ -7,7 +7,7 @@ VERSION=$(git describe --tags | cut -c 2-)
 cat <<EOF
 # Installation
 
-## OSX
+## macOS
 
 \`\`\`bash
 wget https://github.com/busyloop/envcat/releases/download/v${VERSION}/envcat-${VERSION}.darwin-x86_64
