@@ -4,7 +4,7 @@ export VERSION := $(shell grep "^version" shard.yml | cut -d ' ' -f 2)
 
 SRC_FILES = $(shell find src)
 CRYSTAL ?= crystal
-CRYSTAL_SPEC_ARGS = --fail-fast
+CRYSTAL_SPEC_ARGS = --fail-fast --order random
 
 CRYSTAL_ARGS_LOCAL_DARWIN_X86_64   = --progress
 CRYSTAL_ARGS_LOCAL_LINUX_X86_64    = --progress
