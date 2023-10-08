@@ -3,7 +3,7 @@ require "crinja"
 
 # 🐒
 class Crinja::Undefined
-  class_property strict = false
+  class_property strict = false # ameba:disable Style/QueryBoolMethods
   class_property tagged = [] of String
 
   def to_s(io)
