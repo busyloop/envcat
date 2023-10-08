@@ -1,5 +1,7 @@
 ::BUILD_ENV = :spec
 
+ENV.clear
+
 class Exit < Exception; end
 
 macro exit(code)
