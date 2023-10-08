@@ -131,35 +131,28 @@ Python expressions are **not** supported.
 ## Layering data from multiple sources
 
 By default envcat reads variables only from your shell environment.  
-With `-i` you can additionally source data from YAML, JSON or TOML files.
+With `-i` you can additionally source data from YAML, JSON or TOML files.  
+With `-s` you can override variables directly on the command line.
 
-**Example:**
+Both flags can be given multiple times.
+
+**Examples:**
 
 ```bash
-# Override an env-var via YAML file
-$ export FOO=bar
-$ echo "foo: batz" >demo.yaml
+# Override vars with YAML file
+$ export FOO=from_env
+$ echo "foo: from_file" >demo.yaml
 $ envcat -i env -i yaml:demo.yaml FOO
-{"FOO":"batz"}
+{"FOO":"from_file"}
 
-# We can also ignore the environment
-# altogether and use only file sources.
-$ envcat -i yaml:foo.yaml -i json:bar.json FOO
-{"FOO":"batz"}
+# Override a var with `-s`
+$ envcat -i env -i yaml:demo.yaml -s FOO=from_arg FOO
+{"FOO":"from_arg"}
+
+# Layer data from foo.yaml, the environment,
+# JSON from stdin and lastly override FOO
+$ envcat -i yaml:foo.yaml -i env -i json:- -s FOO=bar [..]
 ```
-
-With `-s` you can overwrite values directly.
-
-**Example:**
-
-```bash
-$ export FOO=bar
-$ envcat -s FOO=batz HELLO
-batz
-```
-
-`-s` takes precedence over all other data sources.
-
 
 ### Input normalization
 
