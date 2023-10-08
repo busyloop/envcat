@@ -35,6 +35,8 @@ module Envcat
     end
 
     def write(env)
+      Envcat.claim_stdin! if @io_in == STDIN
+
       Crinja::Undefined.strict = @@strict
 
       crinja = Crinja.new(Crinja::Config.new(keep_trailing_newline: true))

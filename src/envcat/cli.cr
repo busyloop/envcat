@@ -11,6 +11,7 @@ class Envcat::Cli
   E_SYNTAX    =   3
   E_UNDEFINED =   5
   E_IO        =   7
+  E_PARSE     =  11
   E_BUG       = 255
 
   HELP_FOOTER = <<-EOF
@@ -27,6 +28,17 @@ class Envcat::Cli
   end
 
   Toka.mapping({
+    input: {
+      type:        Array(String),
+      default:     ["env"],
+      value_name:  "SOURCE",
+      description: "env|json:PATH|yaml:PATH|toml:PATH (default: env)",
+    },
+    set: {
+      type:        Array(String),
+      value_name:  "KEY=VALUE",
+      description: "KEY=VALUE",
+    },
     format: {
       type:        String,
       default:     Envcat::Cli.default_format,
@@ -49,7 +61,7 @@ class Envcat::Cli
       description: "Print version and exit",
     },
   }, {
-    banner: "\nUsage: envcat [-f #{Format.keys.join("|")}] [-c <VAR[:SPEC]> ..] [GLOB[:etf] ..]\n\n",
+    banner: "\nUsage: envcat [-i <SOURCE> ..] [-s <KEY=VALUE> ..] [-c <VAR[:SPEC]> ..] [-f #{Format.keys.join("|")}] [GLOB[:etf] ..]\n\n",
     help:   false,
   })
 
@@ -59,6 +71,13 @@ class Envcat::Cli
 
   def self.help
     String.build(4096) do |s|
+      s.puts "SOURCE"
+      s.puts "  env           - Shell environment"
+      s.puts "  json:PATH     - JSON file at PATH"
+      s.puts "  yaml:PATH     - YAML file at PATH"
+      s.puts "  toml:PATH     - TOML file at PATH"
+      s.puts
+
       s.puts "FORMAT"
 
       Format.keys.sort!.each do |fmt_id|
@@ -96,7 +115,7 @@ class Envcat::Cli
     end
   end
 
-  def self.process_check_flags(opts)
+  def self.process_check_flags(opts, env)
     validation_errors = [] of String
     opts.check.try &.each do |vspec|
       args = vspec.split(':')
@@ -108,7 +127,7 @@ class Envcat::Cli
       else
         permit_undefined = false
       end
-      error = Check.invalid? ENV, var_name, constraint_id, args, permit_undefined
+      error = Check.invalid? env, var_name, constraint_id, args, permit_undefined
       validation_errors << error if error.is_a?(String)
     rescue ex : Check::UnknownConstraintIdError | Check::ArgumentError
       raise InvalidFlagArgumentError.new("-c #{vspec}", cause: ex)
@@ -116,8 +135,43 @@ class Envcat::Cli
     raise ValidationErrors.new(validation_errors) unless validation_errors.empty?
   end
 
-  def self.process_format_flag(opts, io_out, io_err, io_in)
-    env = Envcat::Env.new(ENV, opts.positional_options)
+  def self.process_input_flags(opts)
+    envs = {full: Envcat::Env.new(["*"]), filtered: Envcat::Env.new(opts.positional_options)}
+    opts.input.try &.each do |ispec|
+      parts = ispec.split(':')
+      format = parts.shift.try &.downcase
+      path = parts.shift?
+
+      if format == "env"
+        envs.values.map(&.merge(ENV))
+      elsif %w[json yaml toml].includes? format
+        raise InvalidFlagArgumentError.new("Path is required in -i #{format}:<path>") if path.nil? || path.empty?
+        path = "/dev/stdin" if path == "-"
+        Envcat.claim_stdin! if path == "/dev/stdin"
+
+        case format
+        when "json"
+          envs.values.map(&.merge_json(path))
+        when "yaml"
+          envs.values.map(&.merge_yaml(path))
+        when "toml"
+          envs.values.map(&.merge_toml(path))
+        end
+      else
+        raise InvalidFlagArgumentError.new("-i #{ispec}", cause: InvalidFlagArgumentError.new("Unknown input type: '#{ispec}'"))
+      end
+    end
+    envs
+  end
+
+  def self.process_set_flags(opts, envs)
+    opts.set.try &.each do |sspec|
+      key, value = sspec.split('=')
+      envs.values.map(&.[key] = value)
+    end
+  end
+
+  def self.process_format_flag(opts, env, io_out, io_err, io_in)
     Envcat::Format[opts.format].new(io_out, io_in).write(env)
   end
 
@@ -131,8 +185,10 @@ class Envcat::Cli
     process_version_flag(opts, io_out)
     be_helpful(opts, io_err)
     check_format_flag(opts) # fail-fast on bad syntax
-    process_check_flags(opts)
-    process_format_flag(opts, io_out, io_err, io_in)
+    envs = process_input_flags(opts)
+    process_set_flags(opts, envs)
+    process_check_flags(opts, envs[:full])
+    process_format_flag(opts, envs[:filtered], io_out, io_err, io_in)
   rescue ex : Toka::MissingOptionError | Toka::MissingValueError | Toka::ConversionError | Toka::UnknownOptionError
     io_err.puts Toka::HelpPageRenderer.new(Envcat::Cli)
     io_err.puts "Syntax error: #{ex}"
@@ -163,12 +219,21 @@ class Envcat::Cli
       io_err.puts "Reason: #{cause.message}"
     end
     exit E_INVALID
+  rescue ex : StdinAlreadyClaimedError
+    io_err.puts "Error: Can read from stdin only once."
+    exit E_SYNTAX
   rescue ex : Format::UnknownFormatIdError
     io_err.puts "Unknown format: #{ex.message}"
     exit E_SYNTAX
   rescue ex : Crinja::TemplateSyntaxError | Crinja::FeatureLibrary::UnknownFeatureError | Crinja::TypeError
     io_err.puts "Malformed template: #{ex.message}"
     exit E_SYNTAX
+  rescue ex : ParseException
+    io_err.puts "Malformed input: #{ex.message}"
+    if cause = ex.cause
+      io_err.puts "Cause: #{cause.message}"
+    end
+    exit E_PARSE
   rescue ex : Exception
     {% if @top_level.constant("BUILD_ENV") == :spec %}
       raise ex

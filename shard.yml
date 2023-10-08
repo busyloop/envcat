@@ -32,6 +32,11 @@ dependencies:
     # version: 0.1.2
     commit: 3c160b77369e3491954b782601247f668ccff071
 
+  toml:
+    github: crystal-community/toml.cr
+    # version: 0.7.0
+    commit: db53c77b6973369c8d5575d20ee91dec971a6fee
+
 development_dependencies:
   ameba:
     github: crystal-ameba/ameba

@@ -1,0 +1,53 @@
+# Key-Value Pair
+name: John Doe
+age: 30
+city: New York
+
+# Array
+hobbies:
+  - Reading
+  - Hiking
+  - Cooking
+
+# Array of Arrays
+matrix:
+  - [1, 2, 3]
+  - [4, 5, 6]
+  - [7, 8, 9]
+
+# Hash of Arrays
+people:
+  - name: Alice
+    age: 25
+  - name: Bob
+    age: 28
+
+# Nested Hash
+address:
+  street: 123 Main St
+  city: Springfield
+  zip: 12345
+
+# Mixed Nesting
+employee:
+  name: Jane Smith
+  department: HR
+  contact:
+    email: jane@example.com
+    phone: 555-123-4567
+  projects:
+    - Project A
+    - Project B
+  skills:
+    - Skill 1
+    - Skill 2
+
+# Inline Arrays and Hashes
+colors: ["Red", "Green", "Blue"]
+person: {first_name: "Mary", last_name: "Johnson"}
+
+# Multi-line Strings
+description: |
+  This is a multi-line
+  description in YAML.
+  It can span multiple lines.

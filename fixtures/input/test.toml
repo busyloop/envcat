@@ -1,0 +1,33 @@
+name = "John Doe"
+age = 30
+city = "New York"
+hobbies = ["Reading", "Hiking", "Cooking"]
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+colors = ["Red", "Green", "Blue"]
+description = "This is a multi-line\ndescription in YAML.\nIt can span multiple lines.\n"
+
+[[people]]
+name = "Alice"
+age = 25
+
+[[people]]
+name = "Bob"
+age = 28
+
+[address]
+street = "123 Main St"
+city = "Springfield"
+zip = 12345
+
+[employee]
+name = "Jane Smith"
+department = "HR"
+projects = ["Project A", "Project B"]
+skills = ["Skill 1", "Skill 2"]
+[employee.contact]
+email = "jane@example.com"
+phone = "555-123-4567"
+
+[person]
+first_name = "Mary"
+last_name = "Johnson"

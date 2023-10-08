@@ -12,3 +12,7 @@ shards:
     git: https://github.com/papierkorb/toka.git
     version: 0.1.2+git.commit.3c160b77369e3491954b782601247f668ccff071
 
+  toml:
+    git: https://github.com/crystal-community/toml.cr.git
+    version: 0.7.0+git.commit.db53c77b6973369c8d5575d20ee91dec971a6fee
+

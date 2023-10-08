@@ -1,5 +1,7 @@
 ::BUILD_ENV = :spec
 
+require "../src/envcat"
+
 ENV.clear
 
 class Exit < Exception; end
