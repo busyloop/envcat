@@ -1,5 +1,5 @@
 name: envcat
-version: 1.0.3
+version: 1.1.0
 
 authors:
   - moe <moe@busyloop.net>
@@ -8,7 +8,7 @@ targets:
   envcat:
     main: src/envcat/cli.cr
 
-crystal: &crystal_version 1.7.0
+crystal: &crystal_version 1.9.2
 
 license: MIT
 
@@ -40,5 +40,4 @@ dependencies:
 development_dependencies:
   ameba:
     github: crystal-ameba/ameba
-    version: 1.3.1
 
