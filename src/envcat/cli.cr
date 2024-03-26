@@ -225,7 +225,7 @@ class Envcat::Cli
   rescue ex : Format::UnknownFormatIdError
     io_err.puts "Unknown format: #{ex.message}"
     exit E_SYNTAX
-  rescue ex : Crinja::TemplateSyntaxError | Crinja::FeatureLibrary::UnknownFeatureError | Crinja::TypeError
+  rescue ex : Crinja::TemplateSyntaxError | Crinja::FeatureLibrary::UnknownFeatureError | Crinja::TypeError | Format::J2::RenderError
     io_err.puts "Malformed template: #{ex.message}"
     exit E_SYNTAX
   rescue ex : ParseException

@@ -14,6 +14,15 @@ describe Envcat::Cli do
       }
     end
 
+    it "fails cleanly on 'empty expression' template error" do
+      tpl = "{{}}"
+      expect_output(/^$/, /^Malformed template:/, tpl) { |o, e, i|
+        expect_raises(Exit, "3") {
+          Envcat::Cli.invoke(%w[-f j2], o, e, i)
+        }
+      }
+    end
+
     it "fails if any referenced var is undefined" do
       tpl = "{{FOO}} {{BAR}}"
       expect_output(/^$/, /Undefined variable: BAR/, tpl) { |o, e, i|
